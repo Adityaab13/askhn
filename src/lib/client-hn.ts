@@ -36,27 +36,7 @@ export async function loadThreadSmart(
     }
   }
 
-  // 2. Try Next.js API route first
-  try {
-    const params = new URLSearchParams({
-      id: String(itemId),
-      ...(hashCommentId ? { commentId: String(hashCommentId) } : {}),
-      ...(forceRefresh ? { refresh: "true" } : {}),
-    });
-    const res = await fetch(`/api/jobs?${params.toString()}`);
-    if (res.ok) {
-      const payload = await res.json();
-      saveToLocalCache(itemId, payload);
-      return {
-        data: { thread: payload.thread, jobs: payload.jobs },
-        highlightCommentId: payload.highlightCommentId ?? hashCommentId,
-      };
-    }
-  } catch {
-    // Fallback to direct CORS fetch from browser
-  }
-
-  // 3. Direct browser fetch fallback (Algolia & Firebase support CORS *)
+  // 2. Fetch directly from Official HN APIs (Algolia + Firebase fallback)
   const data = await fetchThreadJobs(itemId, forceRefresh, hashCommentId);
   saveToLocalCache(itemId, data);
   return { data, highlightCommentId: hashCommentId };
@@ -75,17 +55,5 @@ function saveToLocalCache(itemId: number, data: ThreadResponse) {
 }
 
 export async function loadRecentThreadsSmart(): Promise<MonthlyThreadOption[]> {
-  try {
-    const res = await fetch("/api/threads");
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data.threads) && data.threads.length > 0) {
-        return data.threads;
-      }
-    }
-  } catch {
-    // Fallback to direct client fetch
-  }
   return fetchRecentHiringThreads();
 }
-

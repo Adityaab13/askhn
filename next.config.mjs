@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const isGithubActions = process.env.GITHUB_ACTIONS === "true";
+
+const nextConfig = {
+  output: "export",
+  basePath: isGithubActions ? "/askhn" : "",
+  assetPrefix: isGithubActions ? "/askhn/" : "",
+  images: {
+    unoptimized: true,
+  },
+};
 
 export default nextConfig;
-
